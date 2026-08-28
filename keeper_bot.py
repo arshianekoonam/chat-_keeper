@@ -424,7 +424,7 @@ async def capture_ttl_media(message, ttl):
 
         # Send to keeper bot
         caption = (
-            f"⏱ <b>رسانه خودسوز ذخیره شد</b>\n\n"
+            f"⏱ <b>self-destructing media ذخیره شد</b>\n\n"
             f"👤 <b>فرستنده:</b> {sender_name}\n"
             f"💬 <b>چت:</b> {chat_name}\n"
             f"⏰ <b>زمان:</b> {timestamp}\n"
