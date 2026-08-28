@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Sessions and data
+*.session
+*.session-journal
+*.log
+users.json
+blocked.json
+temp_media/
+
+# Configuration
+config.py
+.env
+
+# Virtual Environment
+venv/
+env/
