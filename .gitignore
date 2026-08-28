@@ -10,6 +10,7 @@ __pycache__/
 *.log
 users.json
 blocked.json
+settings.json
 temp_media/
 
 # Configuration

@@ -95,6 +95,7 @@ STATS = {
 # ---------------------------------------------------------------------------
 USERS_FILE = Path(__file__).parent / "users.json"
 BLOCKED_FILE = Path(__file__).parent / "blocked.json"
+SETTINGS_FILE = Path(__file__).parent / "settings.json"
 
 # { user_id: { "username": str, "first_name": str, "last_seen": float, "starts": int } }
 USERS_DB: dict[int, dict] = {}
@@ -104,7 +105,19 @@ BLOCKED_USERS: set[int] = set()
 
 def _load_db():
     """Load users and blocked lists from disk."""
-    global USERS_DB, BLOCKED_USERS
+    global USERS_DB, BLOCKED_USERS, KEEPER_CHAT_ID
+    
+    if DESTINATION_CHAT_ID:
+        KEEPER_CHAT_ID = DESTINATION_CHAT_ID
+        
+    try:
+        if SETTINGS_FILE.exists() and not DESTINATION_CHAT_ID:
+            data = json.loads(SETTINGS_FILE.read_text(encoding="utf-8"))
+            if data.get("keeper_chat_id"):
+                KEEPER_CHAT_ID = data.get("keeper_chat_id")
+    except Exception as e:
+        logger.warning(f"Failed to load settings.json: {e}")
+
     try:
         if USERS_FILE.exists():
             USERS_DB = {int(k): v for k, v in json.loads(USERS_FILE.read_text(encoding="utf-8")).items()}
@@ -131,6 +144,14 @@ def _save_blocked():
         BLOCKED_FILE.write_text(json.dumps(list(BLOCKED_USERS), ensure_ascii=False, indent=2), encoding="utf-8")
     except Exception as e:
         logger.error(f"Failed to save blocked.json: {e}")
+
+
+def _save_settings():
+    try:
+        data = {"keeper_chat_id": KEEPER_CHAT_ID}
+        SETTINGS_FILE.write_text(json.dumps(data), encoding="utf-8")
+    except Exception as e:
+        logger.error(f"Failed to save settings.json: {e}")
 
 
 def track_user(user_id: int, username: str = None, first_name: str = None):
@@ -530,6 +551,7 @@ async def keeper_start(event):
     # Set keeper chat ID (only admin can do this)
     if user_id == ADMIN_USER_ID:
         KEEPER_CHAT_ID = event.chat_id
+        _save_settings()
 
     await event.reply(
         "👋 سلام! من ربات ذخیره‌ی پیام‌های حذف شده و Self-destructing media هستم.\n\n"
