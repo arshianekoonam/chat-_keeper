@@ -263,19 +263,19 @@ def format_message_info(msg_data: dict) -> str:
     timestamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(msg_data["timestamp"]))
 
     info = (
-        f"🗑 <b>پیام حذف شده</b>\n\n"
-        f"👤 <b>فرستنده:</b> {sender_name}\n"
-        f"💬 <b>چت:</b> {chat_name}\n"
-        f"⏰ <b>زمان:</b> {timestamp}\n"
+        f"🗑 <b>Deleted Message</b>\n\n"
+        f"👤 <b>Sender:</b> {sender_name}\n"
+        f"💬 <b>Chat:</b> {chat_name}\n"
+        f"⏰ <b>Time:</b> {timestamp}\n"
     )
 
     if msg_data.get("text"):
-        info += f"\n📝 <b>متن:</b>\n<code>{msg_data['text'][:2000]}</code>\n"
+        info += f"\n📝 <b>Text:</b>\n<code>{msg_data['text'][:2000]}</code>\n"
 
     if msg_data.get("media_type"):
-        info += f"\n📎 <b>نوع رسانه:</b> {msg_data['media_type']}\n"
+        info += f"\n📎 <b>Media Type:</b> {msg_data['media_type']}\n"
         if msg_data.get("media_caption"):
-            info += f"📝 <b>کپشن:</b> {msg_data['media_caption']}\n"
+            info += f"📝 <b>Caption:</b> {msg_data['media_caption']}\n"
 
     return info
 
@@ -330,10 +330,10 @@ async def cache_message(event):
             ttl = message.media.ttl_seconds
 
         if isinstance(message.media, MessageMediaPhoto):
-            media_info["media_type"] = "عکس"
+            media_info["media_type"] = "Photo"
             media_info["media_caption"] = message.text or ""
             if ttl:
-                media_info["media_type"] = f"عکس (TTL: {ttl}s)"
+                media_info["media_type"] = f"Photo (TTL: {ttl}s)"
                 # Download immediately!
                 if TRACK_TTL_MEDIA:
                     asyncio.create_task(capture_ttl_media(message, ttl))
@@ -341,13 +341,13 @@ async def cache_message(event):
             doc = message.media.document
             mime = getattr(doc, "mime_type", "") or ""
             if "video" in mime:
-                media_info["media_type"] = "ویدیو"
+                media_info["media_type"] = "Video"
             elif "audio" in mime:
-                media_info["media_type"] = "صوت"
+                media_info["media_type"] = "Audio"
             elif "image" in mime:
-                media_info["media_type"] = "عکس"
+                media_info["media_type"] = "Photo"
             else:
-                media_info["media_type"] = f"فایل ({mime})"
+                media_info["media_type"] = f"File ({mime})"
             media_info["media_caption"] = message.text or ""
 
             if ttl:
@@ -445,15 +445,15 @@ async def capture_ttl_media(message, ttl):
 
         # Send to keeper bot
         caption = (
-            f"⏱ <b>self-destructing media ذخیره شد</b>\n\n"
-            f"👤 <b>فرستنده:</b> {sender_name}\n"
-            f"💬 <b>چت:</b> {chat_name}\n"
-            f"⏰ <b>زمان:</b> {timestamp}\n"
-            f"🔥 <b>TTL:</b> {ttl} ثانیه\n"
-            f"📁 <b>حجم:</b> {file_size_mb:.1f}MB\n"
+            f"⏱ <b>Self-destructing media saved</b>\n\n"
+            f"👤 <b>Sender:</b> {sender_name}\n"
+            f"💬 <b>Chat:</b> {chat_name}\n"
+            f"⏰ <b>Time:</b> {timestamp}\n"
+            f"🔥 <b>TTL:</b> {ttl} seconds\n"
+            f"📁 <b>Size:</b> {file_size_mb:.1f}MB\n"
         )
         if message.text:
-            caption += f"\n📝 <b>کپشن:</b> {message.text}\n"
+            caption += f"\n📝 <b>Caption:</b> {message.text}\n"
 
         success = await send_to_keeper(content=caption, file=str(filepath), caption=caption)
 
@@ -554,10 +554,11 @@ async def keeper_start(event):
         _save_settings()
 
     await event.reply(
-        "👋 سلام! من ربات ذخیره‌ی پیام‌های حذف شده و Self-destructing media هستم.\n\n"
-        "🔍 هم‌اکنون در حالت نظارت هستم.\n"
-        "📊 برای دیدن آمار: /stats\n"
-        "❓ برای راهنما: /help"
+        "👋 Hello! I am the deleted messages and self-destructing media saver bot.\n\n"
+        "🔍 I am currently in monitoring mode.\n"
+        "📊 To view stats: /stats\n"
+        "❓ For help: /help\n\n"
+        "👨‍💻 <i>Created by arshia</i>"
     )
     logger.info(f"User {user_id} (@{username}) started the bot")
 
@@ -569,18 +570,18 @@ async def keeper_stats(event):
     if is_user_blocked(user_id):
         return
     if user_id != ADMIN_USER_ID:
-        await event.reply("⛔ این دستور فقط برای ادمین است.")
+        await event.reply("⛔ This command is only for the admin.")
         return
 
     await event.reply(
-        f"📊 <b>آمار Keeper Bot</b>\n\n"
-        f"📝 پیام‌های تحت نظارت: {STATS['messages_tracked']}\n"
-        f"🗑 پیام‌های حذف شده‌ی ذخیره شده: {STATS['deletions_captured']}\n"
-        f"⏱ رسانه‌های خودسوز ذخیره شده: {STATS['ttl_captured']}\n"
-        f"❌ خطاها: {STATS['errors']}\n\n"
-        f"💬 چت‌های تحت نظارت: {len(MESSAGE_CACHE)}\n"
-        f"👥 کاربران ثبت‌شده: {len(USERS_DB)}\n"
-        f"🚫 بلاک شده‌ها: {len(BLOCKED_USERS)}",
+        f"📊 <b>Keeper Bot Stats</b>\n\n"
+        f"📝 Monitored Messages: {STATS['messages_tracked']}\n"
+        f"🗑 Captured Deleted Messages: {STATS['deletions_captured']}\n"
+        f"⏱ Captured TTL Media: {STATS['ttl_captured']}\n"
+        f"❌ Errors: {STATS['errors']}\n\n"
+        f"💬 Monitored Chats: {len(MESSAGE_CACHE)}\n"
+        f"👥 Registered Users: {len(USERS_DB)}\n"
+        f"🚫 Blocked Users: {len(BLOCKED_USERS)}",
         parse_mode="html",
     )
 
@@ -594,28 +595,28 @@ async def keeper_help(event):
     is_admin = (user_id == ADMIN_USER_ID)
 
     help_text = (
-        "📖 <b>راهنما</b>\n\n"
-        "🔍 این ربات به‌صورت خودکار کار می‌کند:\n"
-        "• پیام‌های حذف شده در چت‌های شما را ذخیره می‌کند\n"
-        "• رسانه‌های خودسوز (عکس/ویدیوهای TTL) را قبل از حذف ذخیره می‌کند\n\n"
-        "دستورات:\n"
-        "/start یا .start - شروع\n"
-        "/stats یا .stats - آمار\n"
-        "/help یا .help - راهنما\n\n"
+        "📖 <b>Help</b>\n\n"
+        "🔍 This bot works automatically:\n"
+        "• It saves deleted messages in your chats\n"
+        "• It saves self-destructing media (TTL photos/videos) before they are deleted\n\n"
+        "Commands:\n"
+        "/start or .start - Start\n"
+        "/stats or .stats - Statistics\n"
+        "/help or .help - Help\n\n"
     )
     if is_admin:
         help_text += (
-            "\n<b>🔐 دستورات ادمین (فقط شما):</b>\n"
-            ".users - لیست همه‌ی کاربران\n"
-            ".block <user_id> - بلاک کردن کاربر\n"
-            ".unblock <user_id> - آنبلاک کردن\n"
-            ".blocked - لیست بلاک شده‌ها\n"
-            ".blockall - بلاک کردن همه‌ی کاربران فعلی\n"
-            ".broadcast <message> - پیام به همه\n"
-            ".clearall - پاک کردن همه‌ی پیام‌های این چت\n"
+            "\n<b>🔐 Admin Commands (Only for you):</b>\n"
+            ".users - List all users\n"
+            ".block <user_id> - Block user\n"
+            ".unblock <user_id> - Unblock user\n"
+            ".blocked - List blocked users\n"
+            ".blockall - Block all current users\n"
+            ".broadcast <message> - Message to all\n"
+            ".clearall - Clear all messages in this chat\n"
         )
 
-    help_text += "\n⚠️ <b>نکته:</b> فقط پیام‌هایی که بعد از فعال‌شدن ربات دریافت می‌شوند قابل ذخیره هستند."
+    help_text += "\n⚠️ <b>Note:</b> Only messages received after the bot is activated can be saved."
     await event.reply(help_text, parse_mode="html")
 
 
@@ -629,10 +630,10 @@ async def admin_users(event):
         return
 
     if not USERS_DB:
-        await event.reply("📭 هنوز هیچ کاربری ثبت نشده است.")
+        await event.reply("📭 No users registered yet.")
         return
 
-    lines = [f"👥 <b>لیست کاربران ({len(USERS_DB)} نفر)</b>\n"]
+    lines = [f"👥 <b>User List ({len(USERS_DB)} users)</b>\n"]
     for uid, info in USERS_DB.items():
         username = info.get("username")
         name = info.get("first_name") or "?"
@@ -661,11 +662,11 @@ async def admin_block(event):
     try:
         uid = int(arg)
     except ValueError:
-        await event.reply("❌ آیدی عددی معتبر نیست.\nمثال: <code>.block 123456789</code>", parse_mode="html")
+        await event.reply("❌ Invalid numeric ID.\nExample: <code>.block 123456789</code>", parse_mode="html")
         return
 
     if uid == ADMIN_USER_ID:
-        await event.reply("❌ نمی‌توانید خودتان را بلاک کنید.")
+        await event.reply("❌ You cannot block yourself.")
         return
 
     if block_user(uid):
@@ -673,9 +674,9 @@ async def admin_block(event):
         name = info.get("first_name") or "?"
         username = info.get("username")
         uname = f" (@{username})" if username else ""
-        await event.reply(f"✅ کاربر بلاک شد:\n<code>{uid}</code> | {name}{uname}", parse_mode="html")
+        await event.reply(f"✅ User blocked:\n<code>{uid}</code> | {name}{uname}", parse_mode="html")
     else:
-        await event.reply("⚠️ این کاربر از قبل بلاک شده است.")
+        await event.reply("⚠️ This user is already blocked.")
 
 
 @keeper_bot.on(events.NewMessage(pattern=r"^\.unblock\s+(\S+)"))
@@ -688,13 +689,13 @@ async def admin_unblock(event):
     try:
         uid = int(arg)
     except ValueError:
-        await event.reply("❌ آیدی عددی معتبر نیست.", parse_mode="html")
+        await event.reply("❌ Invalid numeric ID.", parse_mode="html")
         return
 
     if unblock_user(uid):
-        await event.reply(f"✅ کاربر آنبلاک شد: <code>{uid}</code>", parse_mode="html")
+        await event.reply(f"✅ User unblocked: <code>{uid}</code>", parse_mode="html")
     else:
-        await event.reply("⚠️ این کاربر بلاک نبود.")
+        await event.reply("⚠️ This user was not blocked.")
 
 
 @keeper_bot.on(events.NewMessage(pattern=r"^\.blocked$"))
@@ -704,10 +705,10 @@ async def admin_blocked(event):
         return
 
     if not BLOCKED_USERS:
-        await event.reply("📭 لیست بلاک خالی است.")
+        await event.reply("📭 Block list is empty.")
         return
 
-    lines = [f"🚫 <b>کاربران بلاک شده ({len(BLOCKED_USERS)} نفر)</b>\n"]
+    lines = [f"🚫 <b>Blocked Users ({len(BLOCKED_USERS)} users)</b>\n"]
     for uid in BLOCKED_USERS:
         info = USERS_DB.get(uid, {})
         name = info.get("first_name") or "?"
@@ -725,7 +726,7 @@ async def admin_blockall(event):
         return
 
     if not USERS_DB:
-        await event.reply("📭 هیچ کاربری برای بلاک کردن وجود ندارد.")
+        await event.reply("📭 No user to block.")
         return
 
     count = 0
@@ -735,7 +736,7 @@ async def admin_blockall(event):
             count += 1
     _save_blocked()
 
-    await event.reply(f"✅ {count} کاربر بلاک شدند.", parse_mode="html")
+    await event.reply(f"✅ {count} users were blocked.", parse_mode="html")
 
 
 @keeper_bot.on(events.NewMessage(pattern=r"^\.broadcast\s+(.+)"))
@@ -746,7 +747,7 @@ async def admin_broadcast(event):
 
     msg = event.pattern_match.group(1).strip()
     if not msg:
-        await event.reply("❌ پیام خالی است.\nمثال: <code>.broadcast سلام به همه</code>", parse_mode="html")
+        await event.reply("❌ Message is empty.\nExample: <code>.broadcast Hello everyone</code>", parse_mode="html")
         return
 
     sent = 0
@@ -755,14 +756,14 @@ async def admin_broadcast(event):
         if uid in BLOCKED_USERS:
             continue
         try:
-            await keeper_bot.send_message(uid, f"📢 <b>پیام از ادمین:</b>\n\n{msg}", parse_mode="html")
+            await keeper_bot.send_message(uid, f"📢 <b>Message from Admin:</b>\n\n{msg}", parse_mode="html")
             sent += 1
             await asyncio.sleep(0.5)  # Avoid flood limits
         except Exception as e:
             failed += 1
             logger.warning(f"Broadcast failed for {uid}: {e}")
 
-    await event.reply(f"✅ پیام به {sent} کاربر ارسال شد.\n❌ {failed} خطا.", parse_mode="html")
+    await event.reply(f"✅ Message sent to {sent} users.\n❌ {failed} errors.", parse_mode="html")
 
 
 @keeper_bot.on(events.NewMessage(pattern=r"^\.clearall$"))
@@ -771,7 +772,7 @@ async def admin_clearall(event):
     if event.sender_id != ADMIN_USER_ID:
         return
 
-    status_msg = await event.reply("⏳ در حال پاک کردن پیام‌ها...")
+    status_msg = await event.reply("⏳ Clearing messages...")
 
     # Get the chat where the command was sent
     chat_id = event.chat_id
@@ -796,13 +797,13 @@ async def admin_clearall(event):
                 logger.warning(f"Failed to delete message {msg.id}: {e}")
     except Exception as e:
         logger.error(f"clearall error: {e}")
-        await event.reply(f"❌ خطا: {e}")
+        await event.reply(f"❌ Error: {e}")
         return
 
     # Send a confirmation message (will be the only one left)
     await keeper_bot.send_message(
         chat_id,
-        f"🧹 <b>{deleted_count} پیام پاک شد.</b>\n❌ {failed} خطا.",
+        f"🧹 <b>{deleted_count} messages cleared.</b>\n❌ {failed} errors.",
         parse_mode="html",
     )
 
@@ -831,12 +832,12 @@ async def main():
     logger.info("=" * 60)
 
     # Start keeper bot first
-    await keeper_bot.start(bot_token=KEEPER_BOT_TOKEN)
+    await keeper_bot.start(bot_token=KEEPER_BOT_TOKEN)  # type: ignore
     keeper_me = await keeper_bot.get_me()
     logger.info(f"✅ Keeper bot: @{keeper_me.username}")
 
     # Start userbot (your account)
-    await userbot.start(phone=PHONE_NUMBER)
+    await userbot.start(phone=PHONE_NUMBER)  # type: ignore
     if not await userbot.is_user_authorized():
         logger.error("Userbot login failed!")
         return
