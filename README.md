@@ -45,14 +45,17 @@ Have you ever seen the *"This message was deleted"* text and wondered what it wa
      ```bash
      cp config.example.py config.py
      ```
-   - Open `config.py` and enter your Telegram API credentials. You can get your `API_ID` and `API_HASH` from [my.telegram.org](https://my.telegram.org).
-   - Enter your bot token from [@BotFather](https://t.me/BotFather).
+   - Open `config.py` and edit the following variables:
+     - Get your `API_ID` and `API_HASH` by logging into [my.telegram.org](https://my.telegram.org).
+     - Get a new bot token from [@BotFather](https://t.me/BotFather) and set it as `KEEPER_BOT_TOKEN`.
+     - Set `PHONE_NUMBER` to your personal Telegram phone number (with country code).
+     - Set `ADMIN_USER_ID` to your numerical Telegram ID.
 
 4. **Run the bot:**
    ```bash
    python keeper_bot.py
    ```
-   *On your first run, you will need to authenticate with your Telegram account (using phone number and login code).*
+   *Note: Because this is a Userbot, on the very first run, it will ask for a **Telegram verification code** in the terminal. After entering the code, it automatically creates a `.session` file connected to your account so you won't need to log in again.*
 
 ---
 
